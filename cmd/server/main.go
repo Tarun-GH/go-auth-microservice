@@ -7,6 +7,7 @@ import (
 
 	"github.com/Tarun-GH/go-rest-microservice/internal/db"
 	internal "github.com/Tarun-GH/go-rest-microservice/internal/handlers"
+	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
 )
 
 func main() {
