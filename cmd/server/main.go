@@ -23,11 +23,19 @@ func main() {
 	}
 
 	// Inserting a user
-	err = repository.InsertUser(conn, "John Doe", "johndoe@example.com", "hashed_password123")
+	err = repository.InsertUser(conn, "hoho", "hoho@example.com", "h_psd13", "users")
 	if err != nil {
 		log.Fatal("Error inserting user:", err)
 	}
 
+	// Get User by email
+	user, err := repository.GetUserByEmail(conn, "hoho@example.com", "users")
+	if err != nil {
+		log.Fatal("Couldn't get User", err)
+	}
+	log.Printf("User details\n :%s\n :%s\n :%s\n", user.Name, user.Email, user.CreatedAt)
+
+	//Handling routes/endpoint
 	http.HandleFunc("/health", internal.Health)
 	http.HandleFunc("/version", internal.Version)
 

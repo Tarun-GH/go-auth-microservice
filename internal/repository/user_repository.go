@@ -21,14 +21,14 @@ func InsertUser(db *pgx.Conn, name, email, hash string) error {
 			column_default IS NOT NULL
 */
 
-func InsertUser(db *pgx.Conn, name, email, hash string) error {
+func InsertUser(db *pgx.Conn, name, email, hash, t_Name string) error {
 	query := `SELECT column_name 
 	FROM information_schema.columns 
 	WHERE table_name = $1 
 	AND is_identity = 'NO' AND column_default IS NULL 
 	ORDER BY ordinal_position;`
 
-	rows, err := db.Query(context.Background(), query)
+	rows, err := db.Query(context.Background(), query, t_Name)
 	if err != nil {
 		return fmt.Errorf("error querying column names: %w", err)
 	}
@@ -51,7 +51,8 @@ func InsertUser(db *pgx.Conn, name, email, hash string) error {
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 	}
 
-	insertQuery := fmt.Sprintf("INSERT INTO users (%s) VALUES (%s)",
+	insertQuery := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		t_Name,
 		strings.Join(columnName, ", "),
 		strings.Join(placeholders, ", "),
 	)
@@ -61,9 +62,10 @@ func InsertUser(db *pgx.Conn, name, email, hash string) error {
 }
 
 // To select a User by email
-func GetUserByEmail(db *pgx.Conn, email string) (*models.User, error) {
-	// ,err nhi use bcz only return 1 arg
-	row := db.QueryRow(context.Background(), "SELECT * FROM users WHERE email = $1;", email)
+func GetUserByEmail(db *pgx.Conn, email, t_Name string) (*models.User, error) {
+	// "row, err" nhi use bcz only return 1 arg
+	selectQuery := fmt.Sprintf("SELECT * FROM %s WHERE email = $1;", t_Name)
+	row := db.QueryRow(context.Background(), selectQuery, email)
 
 	var u models.User
 	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.CreatedAt)
