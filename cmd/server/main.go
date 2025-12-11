@@ -6,8 +6,9 @@ import (
 	"net/http"
 
 	"github.com/Tarun-GH/go-rest-microservice/internal/db"
-	internal "github.com/Tarun-GH/go-rest-microservice/internal/handlers"
-	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
+	"github.com/Tarun-GH/go-rest-microservice/internal/handlers"
+	"github.com/Tarun-GH/go-rest-microservice/internal/routes"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
@@ -21,26 +22,31 @@ func main() {
 	} else {
 		log.Println("Name from DB:", name)
 	}
+	handlers.DB = conn
 
-	// Inserting a user
-	err = repository.InsertUser(conn, "hoho", "hoho@example.com", "h_psd13", "users")
-	if err != nil {
-		log.Fatal("Error inserting user:", err)
-	}
+	/*	// Inserting a user
+		err = repository.InsertUser(conn, "hoho", "hoho@example.com", "h_psd13", "users")
+		if err != nil {
+			log.Fatal("Error inserting user:", err)
+		}
 
-	// Get User by email
-	user, err := repository.GetUserByEmail(conn, "hoho@example.com", "users")
-	if err != nil {
-		log.Fatal("Couldn't get User", err)
-	}
-	log.Printf("User details\n :%s\n :%s\n :%s\n", user.Name, user.Email, user.CreatedAt)
+		// Get User by email
+		user, err := repository.GetUserByEmail(conn, "hoho@example.com", "users")
+		if err != nil {
+			log.Fatal("Couldn't get User", err)
+		}
+		log.Printf("User details\n :%s\n :%s\n :%s\n", user.Name, user.Email, user.CreatedAt)
+	*/
 
 	//Handling routes/endpoint
-	http.HandleFunc("/health", internal.Health)
-	http.HandleFunc("/version", internal.Version)
+	r := chi.NewRouter()
+	routes.RegisterRoutes(r)
+
+	r.Get("/health", handlers.Health) //----replaced http.HandleFunc("",)
+	r.Get("/version", handlers.Version)
 
 	log.Println("Server running on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal("Couldn't start the server", err)
 	}
 }
