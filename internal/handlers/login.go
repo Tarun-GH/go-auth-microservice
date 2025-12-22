@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
+	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
 
 type LoginRequest struct {
@@ -34,7 +35,22 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//password check and authentication
-	_ = user
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"login request received properly"}`))
+	if ok := utils.CheckPassword(req.Password, user.PasswordHash); !ok {
+		http.Error(w, "invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := utils.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		http.Error(w, "Couldn't generate token", http.StatusInternalServerError)
+		return
+	}
+
+	// w.WriteHeader(http.StatusOK)   -- This is explicit call
+	// w.Write([]byte(`{"token":"` + token + `"}`)) -- Write does the statusOK implicitly
+
+	w.Header().Set("Content-Type", "application/json") //---this Stays above both manual and auto parsing of string to []byte of json ^
+	json.NewEncoder(w).Encode(map[string]string{       //Encode to json then sends it to the destination 'w' {http.ResponseWriter}
+		"token": token,
+	})
 }
