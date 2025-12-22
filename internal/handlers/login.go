@@ -28,29 +28,32 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//DB lookup work
-	user, err := repository.GetUserByEmail(DB, req.Email, "users")
+	//DB lookup work & fetching
+	dbUser, err := repository.GetUserByEmail(DB, req.Email, "users")
 	if err != nil {
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
+
 	//password check and authentication
-	if ok := utils.CheckPassword(req.Password, user.PasswordHash); !ok {
+	if ok := utils.CheckPassword(req.Password, dbUser.PasswordHash); !ok {
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Email)
+	//Generate access token
+	accessToken, err := utils.GenerateToken(dbUser.ID, dbUser.Email)
 	if err != nil {
 		http.Error(w, "Couldn't generate token", http.StatusInternalServerError)
 		return
 	}
 
+	//---Response
 	// w.WriteHeader(http.StatusOK)   -- This is explicit call
 	// w.Write([]byte(`{"token":"` + token + `"}`)) -- Write does the statusOK implicitly
 
 	w.Header().Set("Content-Type", "application/json") //---this Stays above both manual and auto parsing of string to []byte of json ^
 	json.NewEncoder(w).Encode(map[string]string{       //Encode to json then sends it to the destination 'w' {http.ResponseWriter}
-		"token": token,
+		"token": accessToken,
 	})
 }

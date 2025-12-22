@@ -14,6 +14,7 @@ const userContextKey contextKey = "user"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//---AuthMiddlerware verifies JWT before allowing access to protected routes
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, "missing token", http.StatusUnauthorized)
