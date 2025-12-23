@@ -48,12 +48,16 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//generate refresh token
+	refreshToken := utils.GenerateRefresh(dbUser.ID)
+
 	//---Response
 	// w.WriteHeader(http.StatusOK)   -- This is explicit call
 	// w.Write([]byte(`{"token":"` + token + `"}`)) -- Write does the statusOK implicitly
 
 	w.Header().Set("Content-Type", "application/json") //---this Stays above both manual and auto parsing of string to []byte of json ^
 	json.NewEncoder(w).Encode(map[string]string{       //Encode to json then sends it to the destination 'w' {http.ResponseWriter}
-		"token": accessToken,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
 	})
 }

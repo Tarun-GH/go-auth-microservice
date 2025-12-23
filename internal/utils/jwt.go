@@ -12,7 +12,7 @@ func GenerateToken(userID int, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"email":   email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(time.Minute * 1).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -20,13 +20,21 @@ func GenerateToken(userID int, email string) (string, error) {
 }
 
 func VerifyToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) { return jwtSecret, nil })
-	if err != nil || token.Valid {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
+
+	if !token.Valid {
+		return nil, jwt.ErrTokenInvalidClaims
+	}
+
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, err
+		return nil, jwt.ErrTokenInvalidClaims
 	}
 	return claims, nil
 }

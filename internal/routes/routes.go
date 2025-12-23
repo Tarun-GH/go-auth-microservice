@@ -14,4 +14,5 @@ func RegisterRoutes(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 		r.Get("/protected", handlers.ProtectedHandler)
 	})
+	r.Get("/refresh", handlers.RefreshHandler)
 }
