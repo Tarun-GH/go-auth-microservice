@@ -1,32 +1,52 @@
 package utils
 
 import (
-	"sync"
+	"time"
 
+	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
+/* ----In-Memory token storing
 var refreshStore = struct {
 	sync.Mutex
 	data map[string]int
 }{
 	data: make(map[string]int),
 }
+*/
 
-func GenerateRefresh(userID int) string {
+var redisClient *redis.Client
+
+func init() {
+	redisClient = config.NewRedisClient()
+}
+
+func GenerateRefresh(userID int) (string, error) {
 	refreshToken := uuid.NewString()
 
-	refreshStore.Lock()
-	refreshStore.data[refreshToken] = userID
-	refreshStore.Unlock()
+	err := redisClient.Set(
+		config.Ctx,
+		refreshToken,
+		userID,
+		7*24*time.Hour,
+	).Err()
+	if err != nil {
+		return "", err
+	}
 
-	return refreshToken
+	return refreshToken, nil
 }
 
 func GetUserIDFromRefreshToken(token string) (int, bool) {
-	refreshStore.Lock()
-	defer refreshStore.Unlock()
+	val, err := redisClient.Get(config.Ctx, token).Int()
+	if err != nil {
+		return 0, false
+	}
+	return val, true
+}
 
-	userID, ok := refreshStore.data[token]
-	return userID, ok
+func DeleteRefreshToken(r_token string) error {
+	return redisClient.Del(config.Ctx, r_token).Err()
 }

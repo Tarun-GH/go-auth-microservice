@@ -26,11 +26,26 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//deleting old refresh token (for rotation purposes)
+	_ = utils.DeleteRefreshToken(req.RefreshToken)
+
+	//generating new refreshToken as well
+	newRefreshToken, err := utils.GenerateRefresh(userID)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	//generate new accessToken
-	accessToken, _ := utils.GenerateToken(userID, "")
+	accessToken, err := utils.GenerateToken(userID, "")
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Context-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"new_access_token": accessToken,
+		"new_access_token":  accessToken,
+		"new_refresh_token": newRefreshToken,
 	})
 }

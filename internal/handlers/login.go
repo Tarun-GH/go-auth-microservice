@@ -49,7 +49,11 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//generate refresh token
-	refreshToken := utils.GenerateRefresh(dbUser.ID)
+	refreshToken, err := utils.GenerateRefresh(dbUser.ID)
+	if err != nil {
+		http.Error(w, "invalid credentials", http.StatusInternalServerError)
+		return
+	}
 
 	//---Response
 	// w.WriteHeader(http.StatusOK)   -- This is explicit call
