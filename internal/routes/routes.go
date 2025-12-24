@@ -10,10 +10,10 @@ func RegisterRoutes(r chi.Router) {
 	r.Post("/register", handlers.RegisterHandler)
 	r.Post("/login", handlers.LoginHandlers)
 	r.Post("/refresh", handlers.RefreshHandler)
+	r.Post("/logout", handlers.LogoutHandler)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware)
 		r.Get("/protected", handlers.ProtectedHandler)
 	})
-
 }
