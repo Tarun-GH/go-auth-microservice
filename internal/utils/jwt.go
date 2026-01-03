@@ -6,9 +6,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("supersecretkey")
+// var jwtSecret = []byte("supersecretkey")
 
-func GenerateToken(userID int, email string) (string, error) {
+func GenerateToken(jwtSecret []byte, userID int, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"email":   email,
@@ -19,7 +19,7 @@ func GenerateToken(userID int, email string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func VerifyToken(tokenString string) (jwt.MapClaims, error) {
+func VerifyToken(jwtSecret []byte, tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})

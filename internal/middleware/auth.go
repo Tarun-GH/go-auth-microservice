@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
 
@@ -27,7 +28,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := utils.VerifyToken(parts[1])
+		cfg := config.Load()
+		claims, err := utils.VerifyToken([]byte(cfg.JWTSecret), parts[1])
 		if err != nil { //---invalid token
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return

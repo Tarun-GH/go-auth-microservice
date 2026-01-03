@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
@@ -42,7 +43,8 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Generate access token
-	accessToken, err := utils.GenerateToken(dbUser.ID, dbUser.Email)
+	cfg := config.Load() //fetching config data
+	accessToken, err := utils.GenerateToken([]byte(cfg.JWTSecret), dbUser.ID, dbUser.Email)
 	if err != nil {
 		http.Error(w, "Couldn't generate token", http.StatusInternalServerError)
 		return

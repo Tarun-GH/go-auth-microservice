@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
 
@@ -37,7 +38,8 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//generate new accessToken
-	accessToken, err := utils.GenerateToken(userID, "")
+	cfg := config.Load() //fetching config data
+	accessToken, err := utils.GenerateToken([]byte(cfg.JWTSecret), userID, "")
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

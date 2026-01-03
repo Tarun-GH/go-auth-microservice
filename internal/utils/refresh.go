@@ -20,7 +20,8 @@ var refreshStore = struct {
 var redisClient *redis.Client
 
 func init() {
-	redisClient = config.NewRedisClient()
+	cfg := config.Load()
+	redisClient = config.NewRedisClient(cfg.RedisHost)
 }
 
 func GenerateRefresh(userID int) (string, error) {
