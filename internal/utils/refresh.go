@@ -8,20 +8,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-/* ----In-Memory token storing
-var refreshStore = struct {
-	sync.Mutex
-	data map[string]int
-}{
-	data: make(map[string]int),
-}
-*/
-
 var redisClient *redis.Client
 
-func init() {
-	cfg := config.Load()
-	redisClient = config.NewRedisClient(cfg.RedisHost)
+func InitRedis(client *redis.Client) {
+	redisClient = client
 }
 
 func GenerateRefresh(userID int) (string, error) {

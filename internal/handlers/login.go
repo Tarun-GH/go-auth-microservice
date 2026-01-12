@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
@@ -14,7 +13,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func LoginHandlers(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	//creating a LoginRequest and putting data
 	var req LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -30,7 +29,7 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//DB lookup work & fetching
-	dbUser, err := repository.GetUserByEmail(DB, req.Email, "users")
+	dbUser, err := repository.GetUserByEmail(h.DB, req.Email, "users")
 	if err != nil {
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
@@ -43,8 +42,7 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Generate access token
-	cfg := config.Load() //fetching config data
-	accessToken, err := utils.GenerateToken([]byte(cfg.JWTSecret), dbUser.ID, dbUser.Email)
+	accessToken, err := utils.GenerateToken([]byte(h.JWTSecret), dbUser.ID, dbUser.Email)
 	if err != nil {
 		http.Error(w, "Couldn't generate token", http.StatusInternalServerError)
 		return
@@ -58,9 +56,6 @@ func LoginHandlers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//---Response
-	// w.WriteHeader(http.StatusOK)   -- This is explicit call
-	// w.Write([]byte(`{"token":"` + token + `"}`)) -- Write does the statusOK implicitly
-
 	w.Header().Set("Content-Type", "application/json") //---this Stays above both manual and auto parsing of string to []byte of json ^
 	json.NewEncoder(w).Encode(map[string]string{       //Encode to json then sends it to the destination 'w' {http.ResponseWriter}
 		"access_token":  accessToken,

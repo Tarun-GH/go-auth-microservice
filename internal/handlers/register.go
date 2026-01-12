@@ -2,16 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/Tarun-GH/go-rest-microservice/internal/repository"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
-	"github.com/jackc/pgx/v5"
 )
-
-var DB *pgx.Conn
 
 type RegisterRequest struct {
 	Name     string `json:"name"`
@@ -19,7 +16,7 @@ type RegisterRequest struct {
 	Password string `json:"password"`
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	//Putting data into the RegisterReq. struct
 	var req RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -45,20 +42,24 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	//Hashing the password
 	hashed_pass, err := utils.HashPassword(req.Password)
 	if err != nil {
-		fmt.Println("Couldn't hash the password!", err)
+		log.Println("Couldn't hash the password!", err)
 		return
 	}
-	fmt.Println("Hashed Password:", hashed_pass)
 
 	//repo se lekar call kiya insertion ka
-	err = repository.InsertUser(DB, req.Name, req.Email, hashed_pass, "users")
+	err = repository.InsertUser(h.DB, req.Name, req.Email, hashed_pass, "users")
 	if err != nil {
-		fmt.Println("Error inside the registerhander during inserting to DB:", err)
+		log.Println("Error inside the registerhander during inserting to DB:", err)
 		return
 	}
 
-	//updating status
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(`{"message":"user registered"}`))
+	//Message queue publishing
+	_ = h.MQ.PublishUserCreated(req.Email)
 
+	//updating status
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "user registered",
+	})
 }

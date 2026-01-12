@@ -5,42 +5,35 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/db"
 	"github.com/Tarun-GH/go-rest-microservice/internal/handlers"
+	"github.com/Tarun-GH/go-rest-microservice/internal/queue"
 	"github.com/Tarun-GH/go-rest-microservice/internal/routes"
+	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	conn := db.Connect()
-	defer conn.Close(context.Background()) //context is used for the context of duration or conditions for it to last/ trigger
+	cfg := config.Load()
+	conn := db.Connect(cfg)
+	defer conn.Close(context.Background()) //context is used for the context of duration or 'conditions for it to last/ trigger'
 
-	var name string
-	err := conn.QueryRow(context.Background(), "SELECT name FROM test_items WHERE id=2").Scan(&name)
+	//Redis initialisation
+	redisClient := config.NewRedisClient(cfg.RedisHost)
+	utils.InitRedis(redisClient)
+
+	//RabbitMQ connection
+	mq, err := queue.NewRabbitMQ(cfg.RabbitMQURL)
 	if err != nil {
-		log.Println("Query failed:", err)
-	} else {
-		log.Println("Name from DB:", name)
+		log.Fatal("Error connecting to RabbitMQ:", err)
 	}
-	handlers.DB = conn
-
-	/*	// Inserting a user
-		err = repository.InsertUser(conn, "hoho", "hoho@example.com", "h_psd13", "users")
-		if err != nil {
-			log.Fatal("Error inserting user:", err)
-		}
-
-		// Get User by email
-		user, err := repository.GetUserByEmail(conn, "hoho@example.com", "users")
-		if err != nil {
-			log.Fatal("Couldn't get User", err)
-		}
-		log.Printf("User details\n :%s\n :%s\n :%s\n", user.Name, user.Email, user.CreatedAt)
-	*/
+	defer mq.Close()
 
 	//Handling routes/endpoint
+	h := handlers.NewHandler(conn, mq, []byte(cfg.JWTSecret)) //both connections made n send to Handler type
 	r := chi.NewRouter()
-	routes.RegisterRoutes(r)
+	routes.RegisterRoutes(r, h)
 
 	r.Get("/health", handlers.Health) //----replaced http.HandleFunc("",)
 	r.Get("/version", handlers.Version)

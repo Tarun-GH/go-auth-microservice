@@ -6,8 +6,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// var jwtSecret = []byte("supersecretkey")
-
 func GenerateToken(jwtSecret []byte, userID int, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,

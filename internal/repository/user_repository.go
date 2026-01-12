@@ -9,18 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-/* ---used in the beginning for hard coded column names---
-func InsertUser(db *pgx.Conn, name, email, hash string) error {
-	constQuery := "insert into users (name, email, password_hash) values ($1, $2, $3)"
-	_, err := db.Exec(context.Background(), constQuery, name, email, hash)
-	return err
-}
-
-	---this means PostgreSQL has a sequential and a default value
-			is_identity = 'YES'
-			column_default IS NOT NULL
-*/
-
 func InsertUser(db *pgx.Conn, name, email, hash, t_Name string) error {
 	query := `SELECT column_name 
 	FROM information_schema.columns 
@@ -33,8 +21,6 @@ func InsertUser(db *pgx.Conn, name, email, hash, t_Name string) error {
 		return fmt.Errorf("error querying column names: %w", err)
 	}
 	defer rows.Close()
-
-	// colName := []string{name, email, hash} //given values of columns
 
 	var columnName []string
 	for rows.Next() {

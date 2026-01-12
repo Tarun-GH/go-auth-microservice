@@ -8,13 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func Connect() *pgx.Conn {
-	//constrr := "postgres://postgres:pass123@localhost:5432/go_learning" ---- Main connection string
-	cfg := config.Load()
+func Connect(cfg *config.Config) *pgx.Conn { //cfg env dependency hai, should be handled that way
 	constrr := ("postgres://" + cfg.DBUser + ":" + cfg.DBPassword + "@" + cfg.DBHost + ":" + cfg.DBPort + "/" + cfg.DBName)
-
-	// log.Println("ENV DB_HOST =", os.Getenv("DB_HOST"))
-	// log.Println("CFG DBHost =", cfg.DBHost) //config data check
 
 	conn, err := pgx.Connect(context.Background(), constrr)
 	if err != nil {

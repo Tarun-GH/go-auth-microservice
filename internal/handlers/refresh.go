@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Tarun-GH/go-rest-microservice/internal/config"
 	"github.com/Tarun-GH/go-rest-microservice/internal/utils"
 )
 
@@ -12,7 +11,7 @@ type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req RefreshRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -38,14 +37,13 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//generate new accessToken
-	cfg := config.Load() //fetching config data
-	accessToken, err := utils.GenerateToken([]byte(cfg.JWTSecret), userID, "")
+	accessToken, err := utils.GenerateToken(h.JWTSecret, userID, "")
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Context-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"new_access_token":  accessToken,
 		"new_refresh_token": newRefreshToken,
